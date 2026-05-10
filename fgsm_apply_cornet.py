@@ -1,6 +1,14 @@
 """
-nohup python3 fgsm_apply_cornet.py > "*term_output_cornet_fgsm_cifar_0509_2108.txt" 2>&1 &
-nohup python3 fgsm_apply_cornet.py > "*term_output_cornet_fgsm_imagenet_0509_2127.txt" 2>&1 &
+nohup python3 fgsm_apply_cornet.py > "*term_output_fgsm_cifar_cornet_0509_2329.txt" 2>&1 &
+nohup python3 fgsm_apply_cornet.py > "*term_output_fgsm_imgnt_cornet_0509_2238.txt" 2>&1 &
+
+
+when switching between CIFAR-10 and ImageNet, remember to change:
+- root_dir (line 30/31)  
+- epsilon values (line 36)
+- extract_true_label function (line 71)
+- run_fgsm_pipeline (line 93)
+- the file we save to in save_adv_image (line 97)
 """
 from cornet import cornet_s
 import torch
@@ -12,19 +20,20 @@ import torch.nn.functional as F
 import uuid
 import json
 import os
-from fgsm_helperfxnsCorRes import (
-    get_all_image_paths, get_input_batch, output_prediction, extract_true_label,
-    compare_labels, fgsm_attack, save_adv_image, run_fgsm_pipeline, extract_true_label_cifar
+from fgsm_helperfxnsALL import (
+    get_all_image_paths, get_input_batch, output_prediction, compare_labels, fgsm_attack, save_adv_image, 
+    extract_true_label, extract_true_label_cifar, 
+    run_fgsm_pipeline, run_fgsm_pipeline_cifar
 )
 
-root_dir = "val" #imagenet100
-#root_dir = "cifar10_jpegs/test" # cifar-10
+#root_dir = "val" #imagenet100
+root_dir = "cifar10_jpegs/test" # cifar-10
 all_images = get_all_image_paths(root_dir)
 
 # Constants
 imagenet_mean = [0.485, 0.456, 0.406]
 imagenet_std = [0.229, 0.224, 0.225]
-epsilons = [0.005]#, 0.01, 0.1]
+epsilons = [0.005, 0.01, 0.1]
 correct_before = 0
 total_images = 0
 # TRIAL 2: counting correct per epsilon
@@ -59,7 +68,7 @@ for filename in all_images:
             print(f"💔 can't do input_batch for {filename}: {type(e).__name__}: {e}")
         # Get true label: 
         # extract_true_label_cifar when working with CIFAR-10, extract_true_label when working with ImageNet
-        true_index, true_label = extract_true_label(filename) 
+        true_index, true_label = extract_true_label_cifar(filename) 
         print(f"True label: {true_label}, index: {true_index}")
 
         # Get prediction before FGSM (this returns a string label)
@@ -81,11 +90,11 @@ for filename in all_images:
             # alexnet.eval()
 
             # Use CORnet to generate perturbed image
-            pred_after, perturbed_image = run_fgsm_pipeline(model, device, filename, eps, preprocess)
+            pred_after, perturbed_image = run_fgsm_pipeline_cifar(model, device, filename, eps, preprocess)
             try:
                 save_adv_image(
                 perturbed_image, eps, true_label, true_index, pred_before, pred_after,
-                output_dir=f"adv_CORoutputs1/adv_CORoutputs1_eps{eps}",
+                output_dir=f"adv_cifar_CORoutputs1/adv_cifar_CORoutputs1_eps{eps}",
                 mean=imagenet_mean, std=imagenet_std
             )
             # total_per_eps[eps] += 1 # commented out for new accuracy calc

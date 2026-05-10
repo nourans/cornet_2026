@@ -161,3 +161,26 @@ def extract_true_label_cifar(filename):
     
     index = CIFAR10_CLASSES.index(category_folder)  # → 0
     return index, category_folder
+
+
+def run_fgsm_pipeline_cifar(model, device, filename, epsilon, preprocess): #removed default value for epsilon here so that we have to explicitly pass it in every time, which will help with counting correct per epsilon
+    input_batch = get_input_batch(device, filename, preprocess)
+    input_batch.requires_grad = True
+
+    true_index, _ = extract_true_label_cifar(filename)
+
+    # Forward pass
+    output = model(input_batch)
+    loss = F.nll_loss(F.log_softmax(output, dim=1), torch.tensor([true_index]).to(device))
+    model.zero_grad()
+    loss.backward()
+
+    # FGSM
+    data_grad = input_batch.grad.data
+    perturbed_data = fgsm_attack(input_batch, epsilon, data_grad)
+
+    # Predict on perturbed image
+    output_adv = model(perturbed_data)
+    pred_after = output_adv.argmax(dim=1).item() # this gives 
+
+    return pred_after, perturbed_data # pred_
