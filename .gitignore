@@ -1,0 +1,13 @@
+clane9___imagenet-100/
+__pycache__/
+val/
+CORnet/
+cornet/
+adv_CORoutputs?/
+adv_RESoutputs?/
+cifar10_jpegs/
+file_maintenance/
+data/
+*.pyc
+*.arrow
+*.lock

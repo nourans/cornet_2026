@@ -105,7 +105,6 @@ def save_adv_image(img_tensor, epsilon, true_label, true_key, pred_before, pred_
         raise  # Ensure the exception propagates if needed
 
 
-
 def run_fgsm_pipeline(model, device, filename, epsilon, preprocess): #removed default value for epsilon here so that we have to explicitly pass it in every time, which will help with counting correct per epsilon
     input_batch = get_input_batch(device, filename, preprocess)
     input_batch.requires_grad = True

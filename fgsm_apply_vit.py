@@ -1,3 +1,7 @@
+"""
+nohup python3 fgsm_apply_vit.py > "*term_output_vit_fgsm_cifar_0509_2110.txt" 2>&1 &
+nohup python3 fgsm_apply_vit.py > "*term_output_vit_fgsm_imagenet_0509_2129.txt" 2>&1 &
+"""
 from torchvision.models import vit_b_16, ViT_B_16_Weights
 import torch
 import torch.nn as nn
@@ -8,16 +12,19 @@ import torch.nn.functional as F
 import uuid
 import json
 import os
-from fgsm_helperfxnsViT import (
+from fgsm_helperfxnsCorRes import (
     get_all_image_paths, get_input_batch, output_prediction, extract_true_label,
-    compare_labels, fgsm_attack, save_adv_image, run_fgsm_pipeline
+    compare_labels, fgsm_attack, save_adv_image, run_fgsm_pipeline, extract_true_label_cifar
 )
 
-root_dir = "val/val"
+# root_dir = "val" #imagenet100
+root_dir = "cifar10_jpegs/test" # cifar-10
 all_images = get_all_image_paths(root_dir)
 
 # Constants
-epsilons = [0.001, 0.01, 0.1]
+imagenet_mean = [0.5, 0.5, 0.5]
+imagenet_std = [0.5, 0.5, 0.5]
+epsilons = [0.005]#, 0.01, 0.1]
 correct_before = 0
 total_images = 0
 # TRIAL 2: counting correct per epsilon
@@ -44,7 +51,8 @@ for filename in all_images:
         except Exception as e:
             print(f"💔 can't do input_batch for {filename}: {type(e).__name__}: {e}")
         # Get true label
-        true_index, true_label = extract_true_label(filename)
+        # extract_true_label_cifar when working with CIFAR-10, extract_true_label when working with ImageNet
+        true_index, true_label = extract_true_label(filename) 
         print(f"True label: {true_label}, index: {true_index}")
 
         # Get prediction before FGSM (this returns a string label)
@@ -70,7 +78,8 @@ for filename in all_images:
             try:
                 save_adv_image(
                     perturbed_image, eps, true_label, true_index, pred_before, pred_after,
-                    output_dir=f"adv_ViToutputs2/adv_ViToutputs2_eps{eps}"
+                    output_dir=f"adv_RESoutputs1/adv_RESoutputs1_eps{eps}",
+                    mean=imagenet_mean, std=imagenet_std
                 )
             # total_per_eps[eps] += 1 # commented out for new accuracy calc
             except Exception as e:

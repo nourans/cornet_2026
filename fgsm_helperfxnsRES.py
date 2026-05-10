@@ -70,7 +70,7 @@ def fgsm_attack(image, epsilon, data_grad):
 
 
 
-def save_adv_image(img_tensor, epsilon, true_label, true_key, pred_before, pred_after, output_dir="adv_outputs"):
+def save_adv_image(img_tensor, epsilon, true_label, true_key, pred_before, pred_after, output_dir="adv_outputs", mean=None, std=None):
     try:
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
