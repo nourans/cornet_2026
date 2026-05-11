@@ -1,5 +1,5 @@
 """
-nohup python3 fgsm_apply_vit.py > "*term_output_fgsm_imgnt_vit_0511_1458.txt" 2>&1 &
+nohup python3 fgsm_apply_vit.py > "*term_output_fgsm_imgnt_vit_0509_2314.txt" 2>&1 &
 nohup python3 fgsm_apply_vit.py > "*term_output_fgsm_cifar_vit_0509_2340.txt" 2>&1 &
 
 
@@ -27,8 +27,8 @@ from fgsm_helperfxnsALL import (
     run_fgsm_pipeline, run_fgsm_pipeline_cifar
 )
 
-root_dir = "val" #imagenet100
-# root_dir = "cifar10_jpegs/test" # cifar-10
+#root_dir = "val" #imagenet100
+root_dir = "cifar10_jpegs/test" # cifar-10
 all_images = get_all_image_paths(root_dir)
 
 # Constants
@@ -55,13 +55,13 @@ model.to(device)
 
 
 # Preprocess and classify
-preprocess = weights.transforms() # IMAGENET: Preprocess and classify
+# preprocess = weights.transforms() # IMAGENET: Preprocess and classify
 # cifar-10
-# preprocess = transforms.Compose([
-#    transforms.Resize(224),
-#    transforms.ToTensor(),
-#    transforms.Normalize(mean=imagenet_mean, std=imagenet_std),
-# ])
+preprocess = transforms.Compose([
+   transforms.Resize(224),
+   transforms.ToTensor(),
+   transforms.Normalize(mean=imagenet_mean, std=imagenet_std),
+])
 
 # Loop through all images
 for filename in all_images:
@@ -73,7 +73,7 @@ for filename in all_images:
             print(f"💔 can't do input_batch for {filename}: {type(e).__name__}: {e}")
         # Get true label
         # extract_true_label_cifar when working with CIFAR-10, extract_true_label when working with ImageNet
-        true_index, true_label = extract_true_label(filename) 
+        true_index, true_label = extract_true_label_cifar(filename) 
         print(f"True label: {true_label}, index: {true_index}")
 
         # Get prediction before FGSM (this returns a string label)
@@ -95,11 +95,11 @@ for filename in all_images:
             # alexnet.eval()
 
             # Use CORnet to generate perturbed image
-            pred_after, perturbed_image = run_fgsm_pipeline(model, device, filename, eps, preprocess)
+            pred_after, perturbed_image = run_fgsm_pipeline_cifar(model, device, filename, eps, preprocess)
             try:
                 save_adv_image(
                     perturbed_image, eps, true_label, true_index, pred_before, pred_after,
-                    output_dir=f"adv_imgnt_VIToutputs1/adv_imgnt_VIToutputs1_eps{eps}",
+                    output_dir=f"adv_cifar_VIToutputs1/adv_cifar_VIToutputs1_eps{eps}",
                     mean=imagenet_mean, std=imagenet_std
                 )
             # total_per_eps[eps] += 1 # commented out for new accuracy calc
