@@ -9,7 +9,7 @@ adv_imgnt_CORoutputs?/
 adv_imgnt_RESoutputs?/
 adv_imgnt_VIToutputs?/
 adv_RESoutputs?/
-archive-cpuruns/
+archive/
 cifar10_jpegs/
 clane9___imagenet-100/
 cornet/
@@ -17,11 +17,14 @@ CORnet/
 data/
 image_maintenance/
 logs/
+logs_cross/
 maintenance/
 val/
 fgsm_helperfxnsViT.py
 fgsm_helperfxnsRES.py
 term_output*.txt
+training_*.txt
+train_*.txt
 final_term_output*.txt
 *.pyc
 *.arrow
