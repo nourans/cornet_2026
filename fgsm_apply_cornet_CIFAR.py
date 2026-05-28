@@ -46,8 +46,11 @@ total_per_eps = {eps: 0 for eps in epsilons}
 # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 device = torch.device("cuda")
 assert torch.cuda.is_available(), "CUDA is not available — check your GPU setup"
-model = cornet_s(pretrained=True, map_location=device)  # CORnet-S model with pretrained weights
+
+model = cornet_s(pretrained=True)#map_location=device)  # CORnet-S model with pretrained weights
 model = model.module if hasattr(model, 'module') else model
+model.decoder.linear = torch.nn.Linear(512, 10)
+
 model.eval()
 model.to(device)
 
