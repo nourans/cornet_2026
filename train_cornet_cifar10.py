@@ -89,7 +89,12 @@ def build_model():
     # cornet.cornet_s() returns a nn.Sequential wrapping the actual model
     # The actual CORnet model is at index 0
     wrapper = cornet.cornet_s(pretrained=False)
-    model   = wrapper[0]   # unwrap: Sequential([CORnet_S, time_steps]) → CORnet_S
+
+# Handle both DataParallel and plain Sequential packaging
+    if isinstance(wrapper, nn.DataParallel):
+        model = wrapper.module  # unwrap DataParallel → inner model
+    else:
+        model = wrapper[0]      # unwrap Sequential → inner model
 
     # Inspect the decoder to find its linear layer
     # CORnet-S structure: V1 → V2 → V4 → IT → decoder
