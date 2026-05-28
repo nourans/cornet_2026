@@ -98,7 +98,7 @@ for filename in all_images:
             try:
                 save_adv_image(
                     perturbed_image, eps, true_label, true_index, pred_before, pred_after,
-                    output_dir=f"adv_imgnt_RESoutputs1/adv_imgnt_RESoutputs1_eps{eps}",
+                    output_dir=f"adv_imgnt_RESoutputs2/adv_imgnt_RESoutputs2_eps{eps}",
                     mean=imagenet_mean, std=imagenet_std
                 )
             # total_per_eps[eps] += 1 # commented out for new accuracy calc

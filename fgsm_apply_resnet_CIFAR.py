@@ -32,8 +32,8 @@ root_dir = "cifar10_jpegs/test" # cifar-10
 all_images = get_all_image_paths(root_dir)
 
 # Constants
-imagenet_mean = [0.485, 0.456, 0.406]
-imagenet_std = [0.229, 0.224, 0.225]
+MEAN = [0.4914, 0.4822, 0.4465]
+STD  = [0.2023, 0.1994, 0.2010]
 
 epsilons = [0.005, 0.01, 0.1]
 correct_before = 0
@@ -45,22 +45,26 @@ total_per_eps = {eps: 0 for eps in epsilons}
 # Load the model once globally
 # Load pre-trained model on ImageNet
 weights = ResNet50_Weights.IMAGENET1K_V1
-model = resnet50(weights=weights)
-model.eval()
-# preprocess = weights.transforms() # IMAGENET: Preprocess and classify
+import torchvision.models as models
 
-# cifar-10
-preprocess = transforms.Compose([
-   transforms.Resize(224),
-   transforms.ToTensor(),
-   transforms.Normalize(mean=imagenet_mean, std=imagenet_std),
-])
-
+# A ResNet trained on CIFAR-10 (10 output classes)
 # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 device = torch.device("cuda")
 assert torch.cuda.is_available(), "CUDA is not available — check your GPU setup"
 
+model = torch.hub.load("chenyaofo/pytorch-cifar-models", "cifar10_resnet20", pretrained=True)
+model.eval()
 model.to(device)
+
+# preprocess = weights.transforms() # IMAGENET: Preprocess and classify
+
+# cifar-10
+preprocess = transforms.Compose([
+   transforms.Resize(32),
+   transforms.ToTensor(),
+   transforms.Normalize(mean=MEAN, std=STD),
+])
+
 
 # Loop through all images
 for filename in all_images:
@@ -99,7 +103,7 @@ for filename in all_images:
                 save_adv_image(
                     perturbed_image, eps, true_label, true_index, pred_before, pred_after,
                     output_dir=f"adv_cifar_RESoutputs1/adv_cifar_RESoutputs1_eps{eps}",
-                    mean=imagenet_mean, std=imagenet_std
+                    mean=MEAN, std=STD
                 )
             # total_per_eps[eps] += 1 # commented out for new accuracy calc
             except Exception as e:

@@ -1,3 +1,4 @@
+# this is the fgsm_apply_cornet_CIFAR.py file
 # based on fgsm_helperfxnsOG.py, but modified for ViT (e.g., different normalization values, different get_input_batch fxn)
 import torch
 import torchvision.transforms as transforms
@@ -184,3 +185,29 @@ def run_fgsm_pipeline_cifar(model, device, filename, epsilon, preprocess): #remo
     pred_after = output_adv.argmax(dim=1).item() # this gives 
 
     return pred_after, perturbed_data # pred_
+
+
+def run_fgsm_pipeline_cifar_vit(model, device, filename, epsilon, preprocess):
+    input_batch = get_input_batch(device, filename, preprocess)
+    input_batch.requires_grad = True
+
+    true_index, _ = extract_true_label_cifar(filename)
+
+    output = model(input_batch).logits  # ← .logits unpacks the HuggingFace object → plain tensor [1, 10]
+    loss = F.nll_loss(F.log_softmax(output, dim=1), torch.tensor([true_index]).to(device))
+    model.zero_grad()
+    loss.backward()
+
+    data_grad = input_batch.grad.data
+    perturbed_data = fgsm_attack(input_batch, epsilon, data_grad)
+
+    output_adv = model(perturbed_data).logits  # ← again, unpack here too
+    pred_after = output_adv.argmax(dim=1).item()
+
+    return pred_after, perturbed_data
+
+
+def output_prediction_vit(model, input_batch):
+    with torch.no_grad():
+        output = model(input_batch).logits  # ← unpack here too
+    return output.argmax(dim=1).item()

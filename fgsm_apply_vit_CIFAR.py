@@ -21,10 +21,14 @@ import torch.nn.functional as F
 import uuid
 import json
 import os
+from transformers import ViTForImageClassification, AutoImageProcessor
+import torch
+
 from fgsm_helperfxnsALL import (
     get_all_image_paths, get_input_batch, output_prediction, compare_labels, fgsm_attack, save_adv_image, 
     extract_true_label, extract_true_label_cifar, 
-    run_fgsm_pipeline, run_fgsm_pipeline_cifar
+    run_fgsm_pipeline, run_fgsm_pipeline_cifar,
+    output_prediction_vit, run_fgsm_pipeline_cifar_vit
 )
 
 #root_dir = "val" #imagenet100
@@ -32,8 +36,8 @@ root_dir = "cifar10_jpegs/test" # cifar-10
 all_images = get_all_image_paths(root_dir)
 
 # Constants
-imagenet_mean = [0.5, 0.5, 0.5]
-imagenet_std = [0.5, 0.5, 0.5]
+MEAN = [0.485, 0.456, 0.406]
+STD = [0.229, 0.224, 0.225]
 epsilons = [0.005, 0.01, 0.1]
 correct_before = 0
 total_images = 0
@@ -43,14 +47,19 @@ total_per_eps = {eps: 0 for eps in epsilons}
 
 # Load the model once globally
 # Load pre-trained model on ImageNet
-weights = ViT_B_16_Weights.IMAGENET1K_V1
-model = vit_b_16(weights=weights)
-model.eval()
+# weights = ViT_B_16_Weights.IMAGENET1K_V1
+# model = vit_b_16(weights=weights)
+# model.eval()
 
 # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 device = torch.device("cuda")
 assert torch.cuda.is_available(), "CUDA is not available — check your GPU setup"
 print(f"Running on: {device}")  # prints "Running on: cuda" or "Running on: cpu"
+
+model = ViTForImageClassification.from_pretrained(
+    "aaraki/vit-base-patch16-224-in21k-finetuned-cifar10")  # rtained on imagenet-21k, finetuned on CIFAR-10
+
+model.eval()
 model.to(device)
 
 
@@ -58,9 +67,9 @@ model.to(device)
 # preprocess = weights.transforms() # IMAGENET: Preprocess and classify
 # cifar-10
 preprocess = transforms.Compose([
-   transforms.Resize(224),
-   transforms.ToTensor(),
-   transforms.Normalize(mean=imagenet_mean, std=imagenet_std),
+    transforms.Resize(224),   # ViT needs 224, even for CIFAR-10
+    transforms.ToTensor(),
+    transforms.Normalize(mean=MEAN, std=STD),
 ])
 
 # Loop through all images
@@ -77,7 +86,7 @@ for filename in all_images:
         print(f"True label: {true_label}, index: {true_index}")
 
         # Get prediction before FGSM (this returns a string label)
-        pred_before = output_prediction(model, input_batch)
+        pred_before = output_prediction_vit(model, input_batch)
 
         print(f"📊 Model predicted: {pred_before}, True index: {true_index}")
 
@@ -95,12 +104,12 @@ for filename in all_images:
             # alexnet.eval()
 
             # Use CORnet to generate perturbed image
-            pred_after, perturbed_image = run_fgsm_pipeline_cifar(model, device, filename, eps, preprocess)
+            pred_after, perturbed_image = run_fgsm_pipeline_cifar_vit(model, device, filename, eps, preprocess)
             try:
                 save_adv_image(
                     perturbed_image, eps, true_label, true_index, pred_before, pred_after,
                     output_dir=f"adv_cifar_VIToutputs1/adv_cifar_VIToutputs1_eps{eps}",
-                    mean=imagenet_mean, std=imagenet_std
+                    mean=MEAN, std=STD
                 )
             # total_per_eps[eps] += 1 # commented out for new accuracy calc
             except Exception as e:
