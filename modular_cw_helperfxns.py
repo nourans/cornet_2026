@@ -339,3 +339,88 @@ def run_cw_pipeline_cifar(model, device, filename, c_value, preprocess,
         label_fn=extract_true_label_cifar,
         **cw_kwargs
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ViT-SPECIFIC VARIANTS  (for HuggingFace ViTForImageClassification)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Why ViT needs its own functions:
+#   torchvision models return a raw tensor of shape [batch, num_classes].
+#   HuggingFace ViTForImageClassification returns a ModelOutput object
+#   with a .logits attribute — model(x).logits is the tensor you want.
+#   If you call model(x).argmax() directly it crashes because you can't
+#   call argmax() on a ModelOutput object.
+#
+# Rule: always check what a model's forward() returns before calling
+# methods on it. Torchvision → tensor. HuggingFace → ModelOutput.
+
+def output_prediction_vit(model, input_batch):
+    """
+    Prediction for HuggingFace ViTForImageClassification.
+    Extracts .logits before argmax, unlike the standard output_prediction().
+    """
+    with torch.no_grad():
+        outputs = model(input_batch)
+    return outputs.logits.argmax(dim=1).item()
+
+
+def cw_l2_attack_vit(model, input_batch, true_index, device,
+                     c=1e-2, kappa=0.0, lr=1e-2, num_steps=100):
+    """
+    C&W L2 attack for HuggingFace ViTForImageClassification.
+    Identical logic to cw_l2_attack() but extracts .logits from model output
+    before computing the attack loss — required for HuggingFace models.
+    """
+    x0 = input_batch.detach().clone()
+    w  = x0.clone().requires_grad_(True)
+    optimiser = torch.optim.Adam([w], lr=lr)
+
+    best_adv  = x0.clone()
+    best_l2   = float("inf")
+    best_pred = output_prediction_vit(model, x0)
+
+    for step in range(num_steps):
+        optimiser.zero_grad()
+
+        l2_loss = torch.sum((w - x0) ** 2)
+
+        # HuggingFace models return a ModelOutput — must use .logits
+        logits = model(w).logits                   # [1, num_classes]
+        true_logit = logits[0, true_index]
+
+        other_logits = logits.clone()
+        other_logits[0, true_index] = -float("inf")
+        best_other_logit = other_logits.max(dim=1).values[0]
+
+        f_loss = torch.clamp(true_logit - best_other_logit, min=-kappa)
+
+        loss = l2_loss + c * f_loss
+        loss.backward()
+        optimiser.step()
+
+        with torch.no_grad():
+            pred = model(w).logits.argmax(dim=1).item()
+            current_l2 = l2_loss.item() ** 0.5
+
+            if pred != true_index and current_l2 < best_l2:
+                best_l2   = current_l2
+                best_adv  = w.detach().clone()
+                best_pred = pred
+
+    return best_adv, best_pred
+
+
+def run_cw_pipeline_cifar_vit(model, device, filename, c_value, preprocess,
+                               **cw_kwargs):
+    """
+    Full C&W pipeline for CIFAR-10 images with HuggingFace ViT.
+    Uses extract_true_label_cifar for labels and cw_l2_attack_vit for the attack.
+    """
+    input_batch = get_input_batch(device, filename, preprocess)
+    true_index, _ = extract_true_label_cifar(filename)
+
+    perturbed, pred_after = cw_l2_attack_vit(
+        model, input_batch, true_index, device, c=c_value, **cw_kwargs
+    )
+    return pred_after, perturbed
