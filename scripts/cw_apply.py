@@ -1,5 +1,5 @@
 """
-cw_apply.py  –  Unified Carlini & Wagner (L2) attack script.
+modular_cw_apply.py  –  Unified Carlini & Wagner (L2) attack script.
 
 Mirrors the structure of fgsm_apply.py exactly.
 The only things that change vs. the FGSM script:
@@ -29,7 +29,7 @@ import argparse
 import torch
 import torchvision.transforms as transforms
 
-from modular_cw_helperfxns import (
+from src.cornet_2026.attacks.modular_cw_helperfxns import (
     get_all_image_paths,
     get_input_batch,
     output_prediction,
@@ -118,7 +118,7 @@ def build_model_config(model_name: str, dataset_name: str, device: torch.device)
             run_pipeline_fn  = run_cw_pipeline
 
     elif model_name == "cornet":
-        import cornet
+        from src.cornet_2026.models import cornet
 
         CIFAR_MEAN = [0.4914, 0.4822, 0.4465]
         CIFAR_STD  = [0.2470, 0.2435, 0.2616]

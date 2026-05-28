@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
-from cornet import cornet_s
+from src.cornet_2026.models.cornet import cornet_s
 
 device = torch.device("cuda")
 assert torch.cuda.is_available()

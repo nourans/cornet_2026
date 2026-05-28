@@ -5,6 +5,7 @@ adv_cifar_RESoutputs?/
 adv_cifar_VIToutputs?/
 adv_CORoutputs?/
 adv_cw_outputs/
+adv_fgsm_outputs/
 adv_imgnt_CORoutputs?/
 adv_imgnt_RESoutputs?/
 adv_imgnt_VIToutputs?/
@@ -19,7 +20,10 @@ image_maintenance/
 logs/
 logs_cross/
 maintenance/
+OG_fgsm_scripts/
+outputs/
 val/
+vendor/
 cornet_cifar10_best.pth
 fgsm_helperfxnsViT.py
 fgsm_helperfxnsRES.py

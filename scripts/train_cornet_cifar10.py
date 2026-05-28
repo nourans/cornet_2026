@@ -17,10 +17,8 @@ from torch.utils.data import DataLoader
 from torch.optim import SGD
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
-# ── CORnet is a lightweight pip package ──────────────────────────────────────
-# Rule: always import third-party models AFTER confirming they're installed.
-# `pip install cornet` installs the cornet package from the paper's authors.
-import cornet
+# Import CORnet from the local package layout
+from src.cornet_2026.models import cornet
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CONSTANTS  (single source of truth — change config here, not scattered code)

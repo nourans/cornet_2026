@@ -1,4 +1,4 @@
-# this is the fgsm_apply_cornet_CIFAR.py file
+# this is the fgsm_helperfxnsALL.py file
 # based on fgsm_helperfxnsOG.py, but modified for ViT (e.g., different normalization values, different get_input_batch fxn)
 import torch
 import torchvision.transforms as transforms

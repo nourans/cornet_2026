@@ -21,7 +21,7 @@ import torch.nn as nn
 import torchvision
 import torchvision.transforms as T
 from torch.utils.data import DataLoader
-import cornet
+from cornet_2026.models import cornet
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CONSTANTS — must match exactly what was used during training
