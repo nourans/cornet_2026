@@ -32,8 +32,8 @@ root_dir = "cifar10_jpegs/test" # cifar-10
 all_images = get_all_image_paths(root_dir)
 
 # Constants
-imagenet_mean = [0.485, 0.456, 0.406]
-imagenet_std = [0.229, 0.224, 0.225]
+imagenet_mean = [0.4914, 0.4822, 0.4465]
+imagenet_std = [0.2470, 0.2435, 0.2616]
 epsilons = [0.005, 0.01, 0.1]
 correct_before = 0
 total_images = 0
@@ -47,15 +47,20 @@ total_per_eps = {eps: 0 for eps in epsilons}
 device = torch.device("cuda")
 assert torch.cuda.is_available(), "CUDA is not available — check your GPU setup"
 
-model = cornet_s(pretrained=True)#map_location=device)  # CORnet-S model with pretrained weights
+CKPT_PATH = "./cornet_cifar10_best.pth"   # adjust path if needed
+
+model = cornet_s(pretrained=False)         # no ImageNet weights
 model = model.module if hasattr(model, 'module') else model
 model.decoder.linear = torch.nn.Linear(512, 10)
+
+checkpoint = torch.load(CKPT_PATH, map_location=device)
+model.load_state_dict(checkpoint["state_dict"])  # load YOUR weights
 
 model.eval()
 model.to(device)
 
-MEAN = [0.485, 0.456, 0.406]
-STD  = [0.229, 0.224, 0.225]
+MEAN = [0.4914, 0.4822, 0.4465]
+STD  = [0.2470, 0.2435, 0.2616]
 
 # imagent
 # preprocess = transforms.Compose([
@@ -67,7 +72,7 @@ STD  = [0.229, 0.224, 0.225]
 
 # cifar-10
 preprocess = transforms.Compose([
-   transforms.Resize(224),
+   transforms.Resize(96),
    transforms.ToTensor(),
    transforms.Normalize(mean=MEAN, std=STD),
 ])
