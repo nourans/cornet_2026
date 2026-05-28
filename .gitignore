@@ -20,11 +20,13 @@ logs/
 logs_cross/
 maintenance/
 val/
+cornet_cifar10_best.pth
 fgsm_helperfxnsViT.py
 fgsm_helperfxnsRES.py
 term_output*.txt
-training_*.txt
-train_*.txt
+test_*.log
+training_*.log
+train_*.log
 final_term_output*.txt
 *.pyc
 *.arrow
